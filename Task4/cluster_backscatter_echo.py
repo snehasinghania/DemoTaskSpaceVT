@@ -12,7 +12,7 @@ import itertools
 def plot_kmeans(X, attributes):
     #plotting elbow curve to find optimum no of k    
     k_choices = range(1, 7)
-    kmeans_model = [KMeans(n_clusters = k) for k in k_choices]
+    kmeans_model = [cluster.KMeans(n_clusters = k) for k in k_choices]
     #run all models only, empty lhs as data is stored automatically in model objects
     [model.fit(X) for model in kmeans_model]   
     distortions = [sum(np.min(cdist(X, model.cluster_centers_, 'euclidean'), axis=1)) / X.shape[0] for model in kmeans_model]
@@ -24,17 +24,17 @@ def plot_kmeans(X, attributes):
     #higher values of k are more optimal but k=3 will be easy to visualize and 
     #combine to two classes: ionosphere backscatter and ground backscatter
     #using k = 3
-    #ground backscatter is characterised by low Doppler velocity (<~50 m/s) and lowDoppler spectral width (<~50 m/s)
-    k_means_optimal = kmeans_model[0]
+    #ground backscatter is characterised by low Doppler velocity (<~50 m/s) and low Doppler spectral width (<~50 m/s)
+    k_means_optimal = kmeans_model[1]
     fig = plt.figure()
     index = 1
     for pair in itertools.combinations(attributes, 2):
         plt.subplot(5, 2, index)
         x_label = pair[0]
         y_label = pair[1]
-        plt.scatter(X[:, attributes.index(x_label)], X[:, attributes.index(y_label)], c=k_means_optimal.predict(X), s=50, cmap='viridis')
+        plt.scatter(X[:, attributes.index(x_label)], X[:, attributes.index(y_label)], c=k_means_optimal.predict(X), s=1, cmap='viridis')
         centers = k_means_optimal.cluster_centers_
-        plt.scatter(centers[:, attributes.index(x_label)], centers[:, attributes.index(y_label)], c='black', s=200, alpha=0.5)
+        plt.scatter(centers[:, attributes.index(x_label)], centers[:, attributes.index(y_label)], c='black', s=25, alpha=0.5)
         plt.xlabel(x_label)
         plt.ylabel(y_label)
         index += 1
@@ -82,9 +82,10 @@ if __name__ == "__main__":
         X = np.hstack((X, np.array(data[key]).reshape(X.shape[0], 1)))    
         attributes.append(key)  
     #create clustering objects
+    #ward minimizes the variance of the clusters being merged
     ward = cluster.AgglomerativeClustering(n_clusters=2, linkage='ward')
     gmm = GaussianMixture(n_components=2, covariance_type='full')    
-    clustering_algorithms = (('GaussianMixture', gmm) ('Ward', ward))
+    clustering_algorithms = (('GaussianMixture', gmm), ('Ward', ward))
     #run clustering algorithms on data
     for name, algorithm in clustering_algorithms:
         plot_clustering(X, attributes, algorithm)    
